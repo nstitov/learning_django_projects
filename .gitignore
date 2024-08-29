@@ -1,0 +1,7 @@
+venv/
+.vscode/
+.idea/
+.env
+/docker-compose.yml
+
+__pycache__/
