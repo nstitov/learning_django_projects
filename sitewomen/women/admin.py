@@ -1,16 +1,59 @@
-from django.contrib import admin
+from typing import Any
+
+from django.contrib import admin, messages
+from django.db.models import QuerySet
+from django.http import HttpRequest
 
 from .models import Category, Women
 
 
 # Register your models here.
+class MarriedFilter(admin.SimpleListFilter):
+    title = "Статус женщин"
+    parameter_name = "status"
+
+    def lookups(self, request: Any, model_admin: Any) -> list[tuple[Any, str]]:
+        return [
+            ("married", "Замужем"),
+            ("single", "Не замужем"),
+        ]
+
+    def queryset(self, request: Any, queryset: QuerySet[Any]) -> QuerySet[Any] | None:
+        if self.value() == "married":
+            return queryset.filter(husband__isnull=False)
+        elif self.value() == "single":
+            return queryset.filter(husband__isnull=True)
+
+
 @admin.register(Women)
 class WomenAdmin(admin.ModelAdmin):
-    list_display = ["id", "title", "time_create", "is_published"]
-    list_display_links = ["id", "title"]
+    fields = ["title", "slug", "content", "cat", "husband", "tags"]
+    prepopulated_fields = {"slug": ("title",)}
+    filter_horizontal = ["tags"]
+
+    list_display = ["title", "time_create", "is_published", "brief_info"]
+    list_display_links = ["title"]
     ordering = ["-time_create", "title"]
     list_editable = ["is_published"]
-    list_per_page = 5
+    actions = ["set_published", "set_draft"]
+    search_fields = ["title__startswith"]
+    list_filter = [MarriedFilter, "cat__name", "is_published"]
+
+    @admin.display(description="Краткое описание")
+    def brief_info(self, women: Women) -> str:
+        return f"Описание {len(women.content)} символов."
+
+    @admin.action(description="Опубликоовать выбранные записи")
+    def set_published(self, request: HttpRequest, queryset: QuerySet) -> None:
+        count = queryset.update(is_published=Women.Status.PUBLISHED)
+        self.message_user(request, f"Изменено {count} записи(ей).")
+
+    @admin.action(description="Снять с публикации выбранные записи")
+    def set_draft(self, request: HttpRequest, queryset: QuerySet) -> None:
+        count = queryset.update(is_published=Women.Status.DRAFT)
+        self.message_user(
+            request, f"{count} записи(ей) сняты с публикации!", messages.WARNING
+        )
 
 
 @admin.register(Category)
