@@ -1,8 +1,11 @@
+import uuid
+
+from django.core.files.uploadedfile import UploadedFile
 from django.http import HttpRequest, HttpResponse, HttpResponseNotFound
 from django.shortcuts import get_object_or_404, redirect, render
 
-from .forms import AddPostForm
-from .models import Category, TagPost, Women
+from .forms import AddPostForm, UploadFileForm
+from .models import Category, TagPost, UploadFiles, Women
 
 menu = [
     {"title": "О сайте", "url_name": "about"},
@@ -61,13 +64,24 @@ def show_tag_postlist(request: HttpRequest, tag_slug: str) -> HttpResponse:
 
 
 def about(request: HttpRequest) -> HttpResponse:
-    data = {"title": "О сайте", "menu": menu}
+    if request.method == "POST":
+        form = UploadFileForm(request.POST, request.FILES)
+        if form.is_valid():
+            fp = UploadFiles(file=form.cleaned_data["file"])
+            fp.save()
+    else:
+        form = UploadFileForm()
+    data = {
+        "title": "О сайте",
+        "menu": menu,
+        "form": form,
+    }
     return render(request, "women/about.html", context=data)
 
 
 def addpage(request: HttpRequest) -> HttpResponse:
     if request.method == "POST":
-        form = AddPostForm(request.POST)
+        form = AddPostForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
             return redirect("home")

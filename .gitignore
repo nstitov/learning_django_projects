@@ -5,3 +5,4 @@ venv/
 /docker-compose.yml
 
 __pycache__/
+*/uploads

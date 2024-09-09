@@ -37,7 +37,16 @@ class AddPostForm(forms.ModelForm):
 
     class Meta:
         model = Women
-        fields = ["title", "slug", "content", "is_published", "cat", "husband", "tags"]
+        fields = [
+            "title",
+            "slug",
+            "content",
+            "photo",
+            "is_published",
+            "cat",
+            "husband",
+            "tags",
+        ]
         labels = {"slug": "URL"}
         widgets = {
             "title": forms.TextInput(attrs={"class": "form-input"}),
@@ -49,3 +58,7 @@ class AddPostForm(forms.ModelForm):
         if len(title) > 50:
             raise ValidationError("Длина превышает 50 символов")
         return title
+
+
+class UploadFileForm(forms.Form):
+    file = forms.FileField(label="Файл")

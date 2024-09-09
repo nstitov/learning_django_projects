@@ -3,6 +3,7 @@ from typing import Any
 from django.contrib import admin, messages
 from django.db.models import QuerySet
 from django.http import HttpRequest
+from django.utils.safestring import mark_safe
 
 from .models import Category, Women
 
@@ -27,11 +28,12 @@ class MarriedFilter(admin.SimpleListFilter):
 
 @admin.register(Women)
 class WomenAdmin(admin.ModelAdmin):
-    fields = ["title", "slug", "content", "cat", "husband", "tags"]
+    fields = ["title", "slug", "content", "photo", "cat", "husband", "tags"]
+    readonly_fields = ["post_photo"]
     prepopulated_fields = {"slug": ("title",)}
     filter_horizontal = ["tags"]
 
-    list_display = ["title", "time_create", "is_published", "brief_info"]
+    list_display = ["title", "post_photo", "time_create", "is_published"]
     list_display_links = ["title"]
     ordering = ["-time_create", "title"]
     list_editable = ["is_published"]
@@ -39,9 +41,13 @@ class WomenAdmin(admin.ModelAdmin):
     search_fields = ["title__startswith"]
     list_filter = [MarriedFilter, "cat__name", "is_published"]
 
+    save_on_top = True
+
     @admin.display(description="Краткое описание")
-    def brief_info(self, women: Women) -> str:
-        return f"Описание {len(women.content)} символов."
+    def post_photo(self, women: Women) -> str:
+        if women.photo:
+            return mark_safe(f"<img src='{women.photo.url}' width=50>")
+        return "Без фото"
 
     @admin.action(description="Опубликоовать выбранные записи")
     def set_published(self, request: HttpRequest, queryset: QuerySet) -> None:
