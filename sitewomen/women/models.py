@@ -23,8 +23,14 @@ class Women(models.Model):
         verbose_name="Фото",
     )
     content = models.TextField(blank=True, verbose_name="Текст статьи")
-    time_create = models.DateTimeField(auto_now_add=True, verbose_name="Время создания")
-    time_update = models.DateTimeField(auto_now=True, verbose_name="Время изменения")
+    time_create = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="Время создания",
+    )
+    time_update = models.DateTimeField(
+        auto_now=True,
+        verbose_name="Время изменения",
+    )
     is_published = models.IntegerField(
         choices=Status.choices,
         default=Status.DRAFT,
